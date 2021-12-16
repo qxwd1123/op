@@ -11,9 +11,32 @@ else
 	default_do_upgrade "$IMAGE"
 fi
 
-if [ -n "$UPGRADE_BACKUP" ] && type 'platform_copy_config' >/dev/null 2>/dev/null; then
-	platform_copy_config
-fi
+# if [ -n "$UPGRADE_BACKUP" ] && type 'platform_copy_config' >/dev/null 2>/dev/null; then
+# 	platform_copy_config
+# fi
+exec >/dev/tty0 2>/dev/tty0
+set -x
+[ -f /tmp/sysupgrade.tgz ] && {
+	mkdir /tmp/rom -p
+	mkdir /tmp/overlay -p
+	mkdir /tmp/root -p
+	hex=$(hexdump -e '8/1 "%02x ""\n"' -n 8 -s 40 /dev/sda2 | awk '{printf "0x";for(i=NF;i>2;i--)printf $i;print "0000"}')
+	offset=$(printf "0x%x" $(expr $(printf "%d" $hex) + 65536))
+	overlay_loop=$(losetup --show --offset ${offset} --find /dev/sda2)
+	mkfs.f2fs -q -l rootfs_data ${overlay_loop}
+	mount /dev/sda2 /tmp/rom
+	mount ${overlay_loop} -t f2fs /tmp/overlay
+	mkdir /tmp/overlay/upper
+	mkdir /tmp/overlay/work
+	ln -s 2 /tmp/overlay/.fs_state
+	mount /tmp/overlay -t overlay -n -o rw,noatime,lowerdir=/tmp/rom,upperdir=/tmp/overlay/upper,workdir=/tmp/overlay/work /tmp/root
+	tar xzf /tmp/sysupgrade.tgz -C /tmp/root
+	tar xf /tmp/sysbackup.tar -C /tmp
+	sync
+	umount /tmp/root
+	umount /tmp/overlay
+	losetup -d ${overlay_loop}
+}
 
 v "Upgrade completed"
 sleep 1
