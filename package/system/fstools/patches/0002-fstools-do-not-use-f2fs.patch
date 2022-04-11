@@ -1,0 +1,11 @@
+--- a/libfstools/common.c
++++ b/libfstools/common.c
+@@ -94,7 +94,7 @@
+ 		ret = size - offset > F2FS_MINSIZE;
+ 	close(fd);
+ 
+-	return ret;
++	return false;
+ }
+
+ int block_volume_format(struct volume *v, uint64_t offset, const char *bdev)

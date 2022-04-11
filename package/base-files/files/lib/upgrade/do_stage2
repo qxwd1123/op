@@ -23,9 +23,9 @@ set -x
 	hex=$(hexdump -e '8/1 "%02x ""\n"' -n 8 -s 40 /dev/sda2 | awk '{printf "0x";for(i=NF;i>2;i--)printf $i;print "0000"}')
 	offset=$(printf "0x%x" $(expr $(printf "%d" $hex) + 65536))
 	overlay_loop=$(losetup --show --offset ${offset} --find /dev/sda2)
-	mkfs.f2fs -q -l rootfs_data ${overlay_loop}
+	mkfs.ext4 -q -L rootfs_data ${overlay_loop}
 	mount /dev/sda2 /tmp/rom
-	mount ${overlay_loop} -t f2fs /tmp/overlay
+	mount ${overlay_loop} /tmp/overlay
 	mkdir /tmp/overlay/upper
 	mkdir /tmp/overlay/work
 	ln -s 2 /tmp/overlay/.fs_state
