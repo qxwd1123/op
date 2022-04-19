@@ -245,6 +245,11 @@ define Build/gzip
 	@mv $@.new $@
 endef
 
+define Build/zstd
+	zstd -T0 -c $@ $(1) > $@.new
+	@mv $@.new $@
+endef
+
 define Build/install-dtb
 	$(call locked, \
 		$(foreach dts,$(DEVICE_DTS), \
