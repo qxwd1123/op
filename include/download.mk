@@ -12,8 +12,12 @@ ifdef PKG_SOURCE_VERSION
   ifndef PKG_VERSION
     PKG_VERSION := $(if $(PKG_SOURCE_DATE),$(PKG_SOURCE_DATE)-)$(call version_abbrev,$(PKG_SOURCE_VERSION))
   endif
-  PKG_SOURCE_SUBDIR ?= $(PKG_NAME)-$(PKG_VERSION)
-  PKG_SOURCE ?= $(PKG_SOURCE_SUBDIR).tar.xz
+  PKG_SOURCE_SUBDIR ?= $(PKG_NAME)
+  PKG_SOURCE ?= $(PKG_NAME)-$(PKG_VERSION).tar.xz
+endif
+ifeq ($(PKG_SOURCE_URL_FILE),)
+PKG_SOURCE_URL_FILE:=$(PKG_SOURCE)
+PKG_SOURCE:=$(subst -$(PKG_VERSION),,$(subst _$(PKG_VERSION),,$(PKG_SOURCE)))
 endif
 
 DOWNLOAD_RDEP=$(STAMP_PREPARED) $(HOST_STAMP_PREPARED)
@@ -154,7 +158,7 @@ endef
 # $(2): "PKG_" if <name> as in Download/<name> is "default", otherwise "Download/<name>:"
 # $(3): shell command sequence to do the download
 define wrap_mirror
-$(if $(if $(MIRROR),$(filter-out x,$(MIRROR_HASH))),$(SCRIPT_DIR)/download.pl "$(DL_DIR)" "$(FILE)" "$(MIRROR_HASH)" "" || ( $(3) ),$(3)) \
+$(if $(if $(MIRROR),$(filter-out x,$(MIRROR_HASH))),$(SCRIPT_DIR)/download.pl "$(DL_DIR)" "$(FILE)" "$(MIRROR_HASH)" "$(URL_FILE)" || ( $(3) ),$(3)) \
 $(if $(filter check,$(1)), \
 	$(call check_hash,$(FILE),$(MIRROR_HASH),$(2)MIRROR_$(call hash_var,$(MIRROR_MD5SUM))) \
 	$(call check_md5,$(MIRROR_MD5SUM),$(2)MIRROR_MD5SUM,$(2)MIRROR_HASH) \
